@@ -10,7 +10,7 @@
 
 | 位置 | skill |
 |---|---|
-| 接项目（0 之前） | **接项目盘点**（见 SKILL.md「第 0 步」；产物路径记在 `docs/agents/direction.md`） |
+| **0 之前** | **没有 skill** —— 这一步由 cadence 自己跑：**接项目解析**（规格见 SKILL.md「第 0 步」）。产出**全量功能清单**：入口总表 ＋ 分块明细。**它是入口闸门，没盘完不许往下走** |
 | 0 迷雾 | `/grilling`（直用） |
 | 1 发现 | `/wayfinder`（迷雾大）、`/grill-with-docs`（装得下）、`/prototype`（需要可跑的答案）、`/research`（需要外部事实） |
 | 1 → 2 | `/to-spec`（**闸 S**）→ `/to-tickets`（**闸 T**） |
