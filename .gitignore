@@ -1,1 +1,3 @@
-﻿# 手工版本快照；git 历史已接管，这里不再需要
+# 手工版本快照（SKILL.v1.md / SKILL.v2.md）已删除：git 历史就是版本历史。
+# 想回看旧版：git show <sha>:SKILL.md。别再把快照文件加回来。
+SKILL.v*.md
