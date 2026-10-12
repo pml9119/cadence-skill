@@ -29,16 +29,20 @@
 
 **这两个平台都没有官方的一键全量导出。** 下面这些是社区工具，**用之前先确认它们在你的机器上能跑、且你愿意让它读你的聊天数据库**。
 
+**微信这一侧的路正在关**：至少 [chatlog](https://github.com/sjzar/chatlog) 是收到**微信官方函件**后删掉全部代码与提交历史的（2025-10-20）；留痕 / WeChatMsg 也清空了源码，官网 `memotrace.cn` 已经打不开。**这不是「工具停更」，是这条路有合规风险** —— 要不要走，由需求方自己判断。
+
 | 平台 | 工具 | 导出的形态 | 注意 |
 |---|---|---|---|
-| 微信 | [WeChatMsg / 留痕](https://github.com/LC044/WeChatMsg) | HTML / Word / **CSV / TXT**，可按时间段和联系人导 | 需要本机微信数据库；Windows 为主 |
-| 微信 | [MemoTrace](https://github.com/shixiaogaoya/MemoTrace) | HTML / Word / CSV | 同一类工具的另一实现 |
-| 微信 | [wechat-mac-export](https://github.com/rmqg/wechat-mac-export) | 文本 | macOS |
-| 飞书 | **消息导出到文档**（官方功能） | 飞书文档 | [官方说明](https://www.larksuite.com/hc/vi-VN/articles/683892069886-xu%E1%BA%A5t-tin-nh%E1%BA%AFn-ra-m%E1%BB%99t-t%C3%A0i-li%E1%BB%87u) |
-| 飞书 | [feishu-message-for-llm](https://github.com/so2liu/feishu-message-for-llm) | **转成 LLM 易读的 Markdown** | 走飞书开放接口，需配应用权限 |
-| 飞书 | [飞书开放接口 IM v1](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message-resource/get.md?lang=zh-CN) | JSON | 要从接口拉，得自己写脚本 |
+| 微信 | [WeChatMsg / 留痕](https://github.com/LC044/WeChatMsg) | HTML / Word / **CSV / TXT**，可按时间段和联系人导 | **已失效**：仓库只剩 `doc/` 和 readme，官网没了，也没有 release。作者写明不再更新 |
+| 微信 | [shixiaogaoya/MemoTrace](https://github.com/shixiaogaoya/MemoTrace) | 同上 | **不是另一实现，是上面那个项目的第三方 fork** —— 上游清空后它仍留着完整源码（含微信 4.0）。要读源码只能看它，但它是别人拷的，不是作者发布的 |
+| 微信 | [wechat-mac-export](https://github.com/rmqg/wechat-mac-export) | 文本 | macOS。上面几家里**唯一还在动的**（2026-09 仍有提交），风险与同源项目一样 |
+| 飞书 | **消息导出到文档**（官方功能） | 飞书文档 | [官方说明](https://www.feishu.cn/hc/zh-CN/articles/158045525235-%E4%BD%BF%E7%94%A8%E6%B6%88%E6%81%AF%E5%AF%BC%E5%87%BA%E5%88%B0%E6%96%87%E6%A1%A3%E5%8A%9F%E8%83%BD)。需飞书 V7.20+；**话题群、保密模式、禁止转发的消息导不出来** |
+| 飞书 | [feishu-message-for-llm](https://github.com/so2liu/feishu-message-for-llm) | **转成 LLM 易读的 Markdown** | 走飞书开放接口，需配应用权限。个人项目、无 license、几乎没人用 —— 先自己过一遍代码 |
+| 飞书 | [飞书开放接口 IM v1](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/list) | JSON | 拉消息正文走「获取会话历史消息」；要从接口拉，得自己写脚本 |
 
-**导不出来时的退路**：让人在飞书里用官方「消息导出到文档」，把文档**复制粘贴**成 txt/md 落盘。**不要让他手打** —— 手打会顺手润色，原话就丢了。
+> 本表最后一次核对日期：2026-10-12（三个月后一眼判断它过没过期 —— **这张表烂得比 skill 其余部分快**）
+
+**导不出来时的退路**：飞书让人用官方「消息导出到文档」，把文档**复制粘贴**成 txt/md 落盘；微信没有官方导出、社区工具又在下架，就让他**按时间段自己复制粘贴，或截图**走 `/to-questionnaire`。**不要让他手打** —— 手打会顺手润色，原话就丢了。
 
 **导出前先定范围**：**按时间段 + 按联系人或群**。全量导出会得到几万条无关消息，筛选成本远超收益。范围由需求方定（他知道哪段时间在聊这件事）。
 
