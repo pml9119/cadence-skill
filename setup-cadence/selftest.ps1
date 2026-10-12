@@ -61,6 +61,19 @@ Commit 'add 03' $now.AddDays(-5)
 NewTicket 'backlog/tasks/04-delta.md' '04: Delta' 'weird-status'
 Commit 'add 04' $now.AddDays(-3)
 
+# ticket 05: rework journey. ready(-12) -> building(-10) -> verifying(-8) -> building(-5, rework!) -> done(-2).
+# Cycle time should start from last building (-5) to done (-2) = 3 days, not 10 days.
+NewTicket 'backlog/tasks/05-rework.md' '05: Rework' 'ready'
+Commit 'add 05' $now.AddDays(-12)
+SetStatus 'backlog/tasks/05-rework.md' 'building'
+Commit '05 to building' $now.AddDays(-10)
+SetStatus 'backlog/tasks/05-rework.md' 'verifying'
+Commit '05 to verifying' $now.AddDays(-8)
+SetStatus 'backlog/tasks/05-rework.md' 'building'
+Commit '05 rejected back to building' $now.AddDays(-5)
+SetStatus 'backlog/tasks/05-rework.md' 'done'
+Commit '05 finally done' $now.AddDays(-2)
+
 $tool = Join-Path $PSScriptRoot 'flow-metrics.mjs'
 
 Write-Output '===== text report ====='
@@ -76,6 +89,53 @@ Write-Output "counts     : fog=$($j.counts.fog) discovery=$($j.counts.discovery)
 Write-Output "verifying  : count=$($j.verifying.count) oldestDays=$($j.verifying.oldestDays) overAlert=$($j.verifying.overAlert)"
 Write-Output "oldest file: $($j.verifying.oldest)"
 Write-Output "cycleTime  : n=$($j.cycleTimeDays.n) median=$($j.cycleTimeDays.median) max=$($j.cycleTimeDays.max)"
+Write-Output "rework     : total=$($j.rework.totalReworks) tickets=$($j.rework.reworkTickets) rate=$($j.rework.rate)"
 Write-Output "backlog wk : $($j.backlog.Count) rows   cfd: $($j.cfd.Count) rows"
+
+# ---------- assertions: the gate. Any mismatch fails the run. ----------
+$fail = New-Object System.Collections.ArrayList
+
+function Check([string]$what, $actual, $expected) {
+  if ("$actual" -ne "$expected") {
+    [void]$fail.Add("$what  expected=$expected  actual=$actual")
+  }
+}
+
+# day values can drift by a rounding step if the clock ticks between
+# Commit() and the node run, so compare them with a tolerance of 1 hour.
+function CheckDays([string]$what, $actual, $expected) {
+  if ($null -eq $actual -or [math]::Abs([double]$actual - [double]$expected) -gt 0.05) {
+    [void]$fail.Add("$what  expected=$expected  actual=$actual")
+  }
+}
+
+Write-Output ''
+Write-Output '===== assertions ====='
+
+Check   'tickets'              $j.tickets                 5
+Check   'counts.fog'           $j.counts.fog              1
+Check   'counts.verifying'     $j.counts.verifying        1
+Check   'counts.done'          $j.counts.done             2
+Check   'counts.other'         $j.counts.other            1
+Check   'verifying.count'      $j.verifying.count         1
+Check   'verifying.overAlert'  $j.verifying.overAlert     'True'
+CheckDays 'verifying.oldestDays'  $j.verifying.oldestDays  6
+CheckDays 'cycleTime.max'         $j.cycleTimeDays.max     5
+Check   'rework.totalReworks'  $j.rework.totalReworks     1
+Check   'rework.reworkTickets' $j.rework.reworkTickets    1
+
+# The rework ticket must NOT count as a 10-day cycle: its clock restarts at the
+# last `building` (-5), so the two done tickets are 5 days and 3 days -> median 3.
+CheckDays 'cycleTime.median (rework clock restart)' $j.cycleTimeDays.median 3
+Check   'cfd rows'             $j.cfd.Count               30
+
+if ($fail.Count -eq 0) {
+  Write-Output 'PASS  all 13 assertions matched'
+} else {
+  Write-Output "FAIL  $($fail.Count) assertion(s) failed:"
+  foreach ($f in $fail) { Write-Output "  - $f" }
+  Set-Location $startDir
+  exit 1
+}
 
 Set-Location $startDir

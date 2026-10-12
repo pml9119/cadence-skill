@@ -228,30 +228,61 @@ function analyze(timelines, { days, alert, now }) {
   for (const [file, events] of timelines) {
     if (!events.length) continue
     const entered = new Map()
-    for (const e of events) if (!entered.has(e.status)) entered.set(e.status, e.ts)
-    tickets.push({ file, current: events[events.length - 1].status, entered, events })
+    const lastEntered = new Map()
+    for (const e of events) {
+      if (!entered.has(e.status)) entered.set(e.status, e.ts)
+      lastEntered.set(e.status, e.ts)
+    }
+
+    // 计算返工次数：从 verifying/done 退回到 building/ready 的次数
+    let reworkCount = 0
+    let lastBuildingAfterRework = null
+    for (let i = 1; i < events.length; i++) {
+      const prev = events[i - 1].status
+      const curr = events[i].status
+      if ((prev === 'verifying' || prev === 'done') && (curr === 'building' || curr === 'ready')) {
+        reworkCount++
+      }
+      if (curr === 'building' && reworkCount > 0) {
+        lastBuildingAfterRework = events[i].ts
+      }
+    }
+
+    tickets.push({
+      file,
+      current: events[events.length - 1].status,
+      entered,
+      lastEntered,
+      reworkCount,
+      lastBuildingAfterRework,
+      events,
+    })
   }
 
   const counts = {}
   for (const c of [...COLUMNS, 'other']) counts[c] = 0
   for (const t of tickets) counts[t.current] = (counts[t.current] || 0) + 1
 
-  // 待验收积压：当前在 verifying 的票，按进入该列的时间算年龄
+  // 待验收积压：当前在 verifying 的票，按最近一次进入该列的时间算年龄（重入不累积虚高）
   const verifying = tickets
     .filter(t => t.current === 'verifying')
-    .map(t => ({ file: t.file, days: (now - t.entered.get('verifying')) / DAY }))
+    .map(t => ({ file: t.file, days: (now - (t.lastEntered.get('verifying') || t.entered.get('verifying'))) / DAY }))
     .sort((a, b) => b.days - a.days)
 
-  // 周期时间：ready → done
+  // 周期时间：ready → done。若有退回重做，按规范从重新进入 building 起算
   const cycles = []
   for (const t of tickets) {
     if (t.current !== 'done') continue
-    const s = t.entered.get('ready')
-    const e = t.entered.get('done')
-    if (s == null || e == null || e < s) continue
-    cycles.push((e - s) / DAY)
+    const startTs = t.lastBuildingAfterRework || t.entered.get('ready')
+    const endTs = t.lastEntered.get('done') || t.entered.get('done')
+    if (startTs == null || endTs == null || endTs < startTs) continue
+    cycles.push((endTs - startTs) / DAY)
   }
   cycles.sort((a, b) => a - b)
+
+  // 总返工票数与总返工次数
+  const reworkTickets = tickets.filter(t => t.reworkCount > 0)
+  const totalReworks = tickets.reduce((acc, t) => acc + t.reworkCount, 0)
 
   // 吞吐：每周完成数
   const doneTs = tickets.filter(t => t.current === 'done').map(t => t.entered.get('done')).filter(Boolean)
@@ -300,6 +331,11 @@ function analyze(timelines, { days, alert, now }) {
       median: cycles.length ? Number(pct(cycles, 0.5).toFixed(1)) : null,
       p85: cycles.length ? Number(pct(cycles, 0.85).toFixed(1)) : null,
       max: cycles.length ? Number(cycles[cycles.length - 1].toFixed(1)) : null,
+    },
+    rework: {
+      totalReworks,
+      reworkTickets: reworkTickets.length,
+      rate: tickets.length ? Number((reworkTickets.length / tickets.length).toFixed(2)) : 0,
     },
     throughput,
     backlog,
@@ -419,6 +455,10 @@ function render(rep, tracker, days, cross) {
     L.push(`  中位 ${ct.median} 天   p85 ${ct.p85} 天   最长 ${ct.max} 天`)
   } else {
     L.push('周期时间 还没有走完 ready → done 的票')
+  }
+  if (rep.rework && rep.rework.totalReworks > 0) {
+    L.push(`返工次数  共 ${rep.rework.totalReworks} 次（${rep.rework.reworkTickets} 张票退回重做，返工率 ${(rep.rework.rate * 100).toFixed(0)}%）`)
+    L.push('  返工变多时，停的是新开工。')
   }
   L.push('')
 

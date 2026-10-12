@@ -53,9 +53,9 @@ N = 3
 ## 度量
 
 ```bash
-node <工具目录>/flow-metrics.mjs
-node <工具目录>/flow-metrics.mjs --json
-node <工具目录>/flow-metrics.mjs --days 60
+node <工具目录>/flow-metrics.mjs          # 文本报告
+node <工具目录>/flow-metrics.mjs --json   # 结构化输出
+node <工具目录>/flow-metrics.mjs --help   # 参数与更多选项（--days, --alert, --tracker 等）
 ```
 
 数据直接从 `git log` 里票文件的 `status:` 变更算出，不需要额外遥测。

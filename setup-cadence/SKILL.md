@@ -53,7 +53,7 @@ disable-model-invocation: true
 
 用本 skill 目录里的种子文件作为起点：
 
-- [agents-block.md](./agents-block.md) → 并入 `AGENTS.md`（若 `CLAUDE.md` 已存在则用后者）的 `## Agent skills` 块。**已有该块就原地更新，不要重复追加**；不要覆盖用户对周边段落的手改
+- [agents-block.md](./agents-block.md) → 并入 `AGENTS.md`（若 `CLAUDE.md` 已存在则用后者）的 `## Agent skills` 块，**并将 `<N>` 替换为实际确认的并行上限**。**已有该块就原地更新，不要重复追加**；不要覆盖用户对周边段落的手改
 - [flow.md](./flow.md) → `docs/agents/flow.md`，把 N、阈值、回顾时间填进去
 - [DECISIONS.md](./DECISIONS.md) → **仅当仓库没有权威决策源时**才写到仓库根。已有（wayfinder `map.md`、ADR 目录、别的账本）→ **不要写**，改为在 `flow.md` 里指明它在哪。两份账本必然漂移
 - [flow-metrics.mjs](./flow-metrics.mjs) → 拷到**该仓库约定的工具目录**（先读 `AGENTS.md` 和现有目录结构再定，常见 `scripts/` 或 `tools/`），类 Unix 上 `chmod +x`
